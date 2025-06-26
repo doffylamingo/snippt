@@ -1,21 +1,24 @@
-export interface PlaylistAddRemoveTracksResponse {
-  snapshot_id: string;
-}
-
-export interface PlaylistCreateResponse {
-  collaborative: boolean;
-  description: string;
+export interface BaseSpotifyObject {
   external_urls: ExternalUrls;
   href: string;
   id: string;
-  images: Image[];
-  name: string;
-  owner: Owner;
-  public: boolean;
-  snapshot_id: string;
-  tracks: TracksWithItems;
   type: string;
   uri: string;
+}
+
+export interface BasePaginatedResponse<T> {
+  href: string;
+  limit: number;
+  next: string | null;
+  offset: number;
+  previous: string | null;
+  total: number;
+  items: T[];
+}
+
+export interface BaseMediaObject extends BaseSpotifyObject {
+  name: string;
+  images: Image[];
 }
 
 export interface ExternalUrls {
@@ -28,41 +31,39 @@ export interface Image {
   width: number;
 }
 
-export interface Owner {
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
-  type: string;
-  uri: string;
-  display_name: string;
+export interface ExternalIds {
+  isrc?: string;
+  ean?: string;
+  upc?: string;
 }
 
-export interface TracksWithItems {
-  href: string;
-  limit: number;
-  next: string;
-  offset: number;
-  previous: string;
+export interface Followers {
+  href: string | null;
   total: number;
-  items: Item[];
 }
 
-export interface Item {
-  added_at: string;
-  added_by: AddedBy;
-  is_local: boolean;
-  track: Track;
+export interface Restrictions {
+  reason: string;
 }
 
-export interface AddedBy {
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
-  type: string;
-  uri: string;
+export interface Artist extends BaseMediaObject {
+  followers?: Followers;
+  genres?: string[];
+  popularity?: number;
 }
 
-export interface Track {
+export interface Album extends BaseMediaObject {
+  album_type: string;
+  total_tracks: number;
+  available_markets: string[];
+  release_date: string;
+  release_date_precision: string;
+  restrictions?: Restrictions;
+  artists: Artist[];
+  is_playable?: boolean;
+}
+
+export interface Track extends BaseSpotifyObject {
   album: Album;
   artists: Artist[];
   available_markets: string[];
@@ -70,83 +71,93 @@ export interface Track {
   duration_ms: number;
   explicit: boolean;
   external_ids: ExternalIds;
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
   is_playable: boolean;
-  restrictions: Restrictions;
+  restrictions?: Restrictions;
   name: string;
   popularity: number;
-  preview_url: string;
+  preview_url: string | null;
   track_number: number;
-  type: string;
-  uri: string;
   is_local: boolean;
 }
 
-export interface Album {
-  album_type: string;
-  total_tracks: number;
-  available_markets: string[];
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
+export interface Owner extends BaseSpotifyObject {
+  display_name: string;
+}
+
+export interface User extends BaseSpotifyObject {
+  country: string;
+  display_name: string;
+  email: string;
+  explicit_content: ExplicitContent;
+  followers: Followers;
   images: Image[];
-  name: string;
-  release_date: string;
-  release_date_precision: string;
-  restrictions: Restrictions;
-  type: string;
-  uri: string;
-  artists: Artist[];
+  product: string;
 }
 
-export interface Restrictions {
-  reason: string;
-}
-
-export interface Artist {
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
-  name: string;
-  type: string;
-  uri: string;
-}
-
-export interface ExternalIds {
-  isrc: string;
-  ean: string;
-  upc: string;
-}
-
-export interface PlaylistResponse {
-  href: string;
-  limit: number;
-  next: string;
-  offset: number;
-  previous: string;
-  total: number;
-  items: PlaylistItem[];
-}
-
-export interface PlaylistItem {
+export interface PlaylistItem extends BaseMediaObject {
   collaborative: boolean;
   description: string;
-  external_urls: ExternalUrls;
-  href: string;
-  id: string;
-  images: Image[];
-  name: string;
   owner: Owner;
   public: boolean;
   snapshot_id: string;
   tracks: TracksBasic;
-  type: string;
-  uri: string;
 }
+
+export interface PlaylistTrackItem {
+  added_at: string;
+  added_by: AddedBy;
+  is_local: boolean;
+  track: Track;
+}
+
+export interface AddedBy extends BaseSpotifyObject {}
+
+export interface TracksWithItems
+  extends BasePaginatedResponse<PlaylistTrackItem> {}
 
 export interface TracksBasic {
   href: string;
   total: number;
+}
+
+export interface PlaylistCreateResponse extends BaseMediaObject {
+  collaborative: boolean;
+  description: string;
+  owner: Owner;
+  public: boolean;
+  snapshot_id: string;
+  tracks: TracksWithItems;
+}
+
+export interface PlaylistResponse extends BasePaginatedResponse<PlaylistItem> {}
+
+export interface TopArtistsResponse extends BasePaginatedResponse<Artist> {}
+
+export interface TopTracksResponse extends BasePaginatedResponse<Track> {}
+
+export interface PlaylistAddRemoveTracksResponse {
+  snapshot_id: string;
+}
+
+export interface ExplicitContent {
+  filter_enabled: boolean;
+  filter_locked: boolean;
+}
+
+export interface BaseCursorPaginatedResponse<T> {
+  href: string;
+  limit: number;
+  next: string | null;
+  cursors: Cursors;
+  total: number;
+  items: T[];
+}
+
+export interface Cursors {
+  after: string;
+  before?: string;
+}
+
+export interface FollowingArtistsResponse {
+  artists: BaseCursorPaginatedResponse<Artist>;
 }
