@@ -16,14 +16,9 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
     ),
     async c => {
       const { limit } = c.req.valid("query");
-      const user = c.get("user");
-
-      if (!user || !user.id) {
-        throw new Error("Cannot fetch playlists: user ID missing");
-      }
 
       const data = await baseSpotifyFetch<PlaylistResponse>(
-        user.id,
+        c,
         `me/playlists?limit=${limit}`,
       );
 
@@ -41,16 +36,11 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
     ),
     async c => {
       const body = c.req.valid("json");
-      const user = c.get("user");
-
-      if (!user || !user.id) {
-        throw new Error("Cannot fetch playlists: user ID missing");
-      }
 
       const { playlistId, ...payload } = body;
 
       const data = await baseSpotifyFetch<PlaylistResponse>(
-        user.id,
+        c,
         `playlists/${playlistId}/tracks`,
         "POST",
         payload,
@@ -70,18 +60,13 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
     ),
     async c => {
       const body = c.req.valid("json");
-      const user = c.get("user");
-
-      if (!user || !user.id) {
-        throw new Error("Cannot fetch playlists: user ID missing");
-      }
 
       const { playlistId, ...payload } = body;
 
       const tracks = payload.uris.map(uri => ({ uri }));
 
       const data = await baseSpotifyFetch<PlaylistResponse>(
-        user.id,
+        c,
         `playlists/${playlistId}/tracks`,
         "DELETE",
         { tracks },
@@ -104,16 +89,11 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
     ),
     async c => {
       const body = c.req.valid("json");
-      const user = c.get("user");
-
-      if (!user || !user.id) {
-        throw new Error("Cannot fetch playlists: user ID missing");
-      }
 
       const { userId, ...payload } = body;
 
       const data = await baseSpotifyFetch<PlaylistResponse>(
-        user.id,
+        c,
         `users/${userId}/playlists`,
         "POST",
         payload,

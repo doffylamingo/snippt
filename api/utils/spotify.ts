@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import { prisma } from "@/lib/db";
 
 async function refreshSpotifyToken(oldRefreshToken: string) {
@@ -23,11 +24,19 @@ async function refreshSpotifyToken(oldRefreshToken: string) {
 }
 
 export async function baseSpotifyFetch<T>(
-  userId: string,
+  context: Context,
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body?: Record<string, unknown>,
 ): Promise<T> {
+  const user = context.get("user");
+
+  if (!user || !user.id) {
+    throw new Error("Cannot fetch playlists: user ID missing");
+  }
+
+  const userId = user.id;
+
   const acc = await prisma.account.findFirst({
     where: { userId },
     select: {
