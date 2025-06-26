@@ -161,3 +161,11 @@ export interface Cursors {
 export interface FollowingArtistsResponse {
   artists: BaseCursorPaginatedResponse<Artist>;
 }
+
+export interface SavedTrackItem {
+  added_at: string;
+  track: Track;
+}
+
+export interface SavedTracksResponse
+  extends BasePaginatedResponse<SavedTrackItem> {}

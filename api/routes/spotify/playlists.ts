@@ -6,10 +6,9 @@ import type {
 } from "@shared/types/spotify";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { Variables } from "@/app";
 import { baseSpotifyFetch } from "@/utils/spotify";
 
-export const playlistRoutes = new Hono<{ Variables: Variables }>()
+export const playlistRoutes = new Hono()
   .get(
     "/",
     zValidator(
