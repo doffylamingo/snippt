@@ -1,5 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
-import type { PlaylistResponse } from "@shared/types/spotify";
+import type {
+  PlaylistAddRemoveTracksResponse,
+  PlaylistCreateResponse,
+  PlaylistResponse,
+} from "@shared/types/spotify";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { Variables } from "@/app";
@@ -39,7 +43,7 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
 
       const { playlistId, ...payload } = body;
 
-      const data = await baseSpotifyFetch<PlaylistResponse>(
+      const data = await baseSpotifyFetch<PlaylistAddRemoveTracksResponse>(
         c,
         `playlists/${playlistId}/tracks`,
         "POST",
@@ -65,7 +69,7 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
 
       const tracks = payload.uris.map(uri => ({ uri }));
 
-      const data = await baseSpotifyFetch<PlaylistResponse>(
+      const data = await baseSpotifyFetch<PlaylistAddRemoveTracksResponse>(
         c,
         `playlists/${playlistId}/tracks`,
         "DELETE",
@@ -92,7 +96,7 @@ export const playlistRoutes = new Hono<{ Variables: Variables }>()
 
       const { userId, ...payload } = body;
 
-      const data = await baseSpotifyFetch<PlaylistResponse>(
+      const data = await baseSpotifyFetch<PlaylistCreateResponse>(
         c,
         `users/${userId}/playlists`,
         "POST",
