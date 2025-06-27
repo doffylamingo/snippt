@@ -1,5 +1,6 @@
 import type { PlaylistItem } from "@shared/types/spotify";
 import { useEffect, useState } from "react";
+import { Outlet } from "react-router";
 import { api } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
 
@@ -71,6 +72,7 @@ function App() {
       <div>
         <Logout />
       </div>
+      <Outlet />
     </div>
   );
 }
