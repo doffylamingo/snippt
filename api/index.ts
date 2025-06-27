@@ -1,14 +1,8 @@
-import { auth } from "@/lib/auth";
-import { factory } from "./app";
-import { spotifyRoutes } from "./routes/spotify";
+import app from "./app";
 
-const app = factory.createApp().basePath("/api");
-
-app.on(["POST", "GET"], "/auth/*", c => {
-  return auth.handler(c.req.raw);
+Bun.serve({
+  port: 3000,
+  hostname: "0.0.0.0",
+  fetch: app.fetch,
+  idleTimeout: 30,
 });
-
-const routes = app.route("/spotify", spotifyRoutes);
-
-export type ApiRoute = typeof routes;
-export default app;

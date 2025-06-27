@@ -169,3 +169,21 @@ export interface SavedTrackItem {
 
 export interface SavedTracksResponse
   extends BasePaginatedResponse<SavedTrackItem> {}
+
+export interface Seed {
+  afterFilteringSize: number;
+  afterRelinkingSize: number;
+  href: string;
+  id: string;
+  initialPoolSize: number;
+  type: string;
+}
+
+export interface RecommendationsResponse {
+  seeds: Seed[];
+  tracks: Track[];
+}
+
+export interface ArtistsResponse {
+  artists: Artist[];
+}

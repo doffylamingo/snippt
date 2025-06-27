@@ -1,32 +1,14 @@
-import { cors } from "hono/cors";
-import { createFactory } from "hono/factory";
 import { auth } from "@/lib/auth";
+import { factory } from "./factory";
+import { spotifyRoutes } from "./routes/spotify";
 
-type InferSession = typeof auth.$Infer.Session;
-export type Variables = {
-  user: InferSession["user"] | null;
-  session: InferSession["session"] | null;
-};
+const app = factory.createApp().basePath("/api");
 
-export const factory = createFactory<{ Variables: Variables }>({
-  initApp: app => {
-    app.use(
-      "/api/auth/*",
-      cors({
-        origin: ["http://localhost:5173"],
-        allowHeaders: ["Content-Type", "Authorization"],
-        allowMethods: ["POST", "GET", "OPTIONS"],
-        exposeHeaders: ["Content-Length"],
-        maxAge: 600,
-        credentials: true,
-      }),
-    );
-
-    app.use(async (c, next) => {
-      const session = await auth.api.getSession({ headers: c.req.raw.headers });
-      c.set("user", session?.user ?? null);
-      c.set("session", session?.session ?? null);
-      await next();
-    });
-  },
+app.on(["POST", "GET"], "/auth/*", c => {
+  return auth.handler(c.req.raw);
 });
+
+const routes = app.route("/spotify", spotifyRoutes);
+
+export type ApiRoute = typeof routes;
+export default app;
