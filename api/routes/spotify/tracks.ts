@@ -40,7 +40,6 @@ export const tracksRoutes = new Hono()
         ids: [id],
       });
 
-      c.status(204);
       return c.json({ message: "Liked" });
     },
   )
@@ -59,7 +58,6 @@ export const tracksRoutes = new Hono()
         ids: [id],
       });
 
-      c.status(204);
       return c.json({ message: "Unliked" });
     },
   );
