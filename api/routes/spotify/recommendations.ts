@@ -131,7 +131,7 @@ export const recommendationsRoutes = new Hono().post(
           id: track.artists[0].id,
           name: track.artists[0].name,
           genres: artists.artists[index].genres,
-          followers: formatNumber(artists.artists[0].followers?.total ?? 0),
+          followers: formatNumber(artists.artists[index].followers?.total ?? 0),
           image: artists.artists[index].images[0]?.url,
         },
         album: {
