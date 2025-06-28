@@ -1,21 +1,42 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
+import "@/index.css";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import App from "./App.tsx";
-import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
-import { AuthProvider } from "./context/AuthContext.tsx";
+import LoadingFeed from "@/components/LoadingFeed";
+import { ProtectedRoute } from "@/components/ProtectedRoute.tsx";
+import { AuthProvider } from "@/context/AuthContext.tsx";
+import { api } from "@/lib/api-client";
+import HomePage from "@/pages/HomePage";
+import LoginPage from "@/pages/LoginPage";
+import SettingsPage from "@/pages/SettingsPage";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <ProtectedRoute />,
     children: [
       {
+        index: true,
+        element: <HomePage />,
+        loader: async () => {
+          const res = await api.spotify.recommendations.$post({
+            json: {
+              seed_artists: "2h93pZq0e7k5yf4dywlkpM",
+            },
+          });
+          return await res.json();
+        },
+        hydrateFallbackElement: <LoadingFeed />,
+      },
+      {
         element: <ProtectedRoute />,
-        children: [{ path: "/playlist", element: <div>is this working</div> }],
+        children: [{ path: "settings", element: <SettingsPage /> }],
       },
     ],
+  },
+  {
+    path: "login",
+    element: <LoginPage />,
   },
 ]);
 

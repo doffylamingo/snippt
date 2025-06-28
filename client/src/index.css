@@ -1,1 +1,32 @@
+@import url("https://fonts.cdnfonts.com/css/satoshi");
+
 @import "tailwindcss";
+
+@theme {
+  --animate-marquee: marquee 12s linear infinite;
+  @keyframes marquee {
+    0%,
+    15% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+body {
+  font-family: "Satoshi", sans-serif;
+  font-optical-sizing: auto;
+  background-color: #0c0d0e;
+  color: white;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
