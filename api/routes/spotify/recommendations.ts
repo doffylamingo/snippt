@@ -116,6 +116,12 @@ export const recommendationsRoutes = new Hono().post(
       "GET",
     );
 
+    const follows = await baseSpotifyFetch<boolean[]>(
+      c,
+      `me/following/contains?type=artist&ids=${artists.artists.map(artist => artist.id).join(",")}`,
+      "GET",
+    );
+
     const tracks = recommendation.tracks.map(async (track, index) => {
       const previewUrl =
         track.preview_url ?? (await getSpotifyPreviewUrl(track.id));
@@ -143,6 +149,7 @@ export const recommendationsRoutes = new Hono().post(
           type: track.album.album_type,
         },
         liked: likes[index],
+        isFollowing: follows[index],
       };
     });
 
