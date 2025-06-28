@@ -60,4 +60,40 @@ export const profileRoutes = new Hono()
 
       return c.json(data);
     },
+  )
+  .post(
+    "/follow",
+    zValidator(
+      "json",
+      z.object({
+        id: z.string(),
+      }),
+    ),
+    async c => {
+      const { id } = c.req.valid("json");
+
+      await baseSpotifyFetch(c, "me/following?type=artist", "PUT", {
+        ids: [id],
+      });
+
+      return c.json({ message: "Followed" });
+    },
+  )
+  .post(
+    "/unfollow",
+    zValidator(
+      "json",
+      z.object({
+        id: z.string(),
+      }),
+    ),
+    async c => {
+      const { id } = c.req.valid("json");
+
+      await baseSpotifyFetch(c, "me/following?type=artist", "DELETE", {
+        ids: [id],
+      });
+
+      return c.json({ message: "Unfollowed" });
+    },
   );

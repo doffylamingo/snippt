@@ -21,6 +21,7 @@ const options = {
         "user-library-modify",
         "playlist-modify-public",
         "playlist-modify-private",
+        "user-follow-modify",
       ],
     },
   },
