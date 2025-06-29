@@ -1,14 +1,24 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@/index.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import LoadingFeed from "@/components/LoadingFeed";
 import { ProtectedRoute } from "@/components/ProtectedRoute.tsx";
 import { AuthProvider } from "@/context/AuthContext.tsx";
-import { api } from "@/lib/api-client";
 import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
 import SettingsPage from "@/pages/SettingsPage";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 3,
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 5,
+    },
+  },
+});
 
 const router = createBrowserRouter([
   {
@@ -18,17 +28,6 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
-        loader: async () => {
-          const res = await api.spotify.recommendations.$post({
-            json: {
-              limit: 10,
-              seed_artists: "5INjqkS1o8h1imAzPqGZBb,5n1xzqdY899CtBxeu88qHf",
-              min_popularity: 80,
-            },
-          });
-          return await res.json();
-        },
-        hydrateFallbackElement: <LoadingFeed />,
       },
       {
         element: <ProtectedRoute />,
@@ -44,8 +43,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );

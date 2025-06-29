@@ -6,9 +6,12 @@ export function useAudioPlayer() {
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const pausedByUser = useRef<{ [key: string]: boolean }>({});
+  const playQueue = useRef<string | null>(null);
 
   const playTrack = useCallback(
     async (trackId: string) => {
+      playQueue.current = trackId;
+
       const audioElement = audioRefs.current[trackId];
       const videoElement = videoRefs.current[trackId];
       if (!audioElement) return;
@@ -20,21 +23,31 @@ export function useAudioPlayer() {
         currentVideo?.pause();
       }
 
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (playQueue.current !== trackId) return;
+
       try {
         await audioElement.play();
         if (videoElement?.src) {
           await videoElement.play();
         }
-        setPlayingTrack(trackId);
-        pausedByUser.current[trackId] = false;
+
+        if (playQueue.current === trackId) {
+          setPlayingTrack(trackId);
+          pausedByUser.current[trackId] = false;
+        }
       } catch (error) {
-        console.warn("Failed to play audio/video:", error);
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.warn("Failed to play audio/video:", trackId, error);
+        }
       }
     },
     [playingTrack],
   );
 
   const pauseTrack = useCallback((trackId: string) => {
+    playQueue.current = null;
     const audioElement = audioRefs.current[trackId];
     const videoElement = videoRefs.current[trackId];
     if (!audioElement) return;
