@@ -4,24 +4,31 @@ export function useAudioPlayer() {
   const [playingTrack, setPlayingTrack] = useState<string | null>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
   const pausedByUser = useRef<{ [key: string]: boolean }>({});
 
   const playTrack = useCallback(
     async (trackId: string) => {
       const audioElement = audioRefs.current[trackId];
+      const videoElement = videoRefs.current[trackId];
       if (!audioElement) return;
 
       if (playingTrack && playingTrack !== trackId) {
         const currentAudio = audioRefs.current[playingTrack];
+        const currentVideo = videoRefs.current[playingTrack];
         currentAudio?.pause();
+        currentVideo?.pause();
       }
 
       try {
         await audioElement.play();
+        if (videoElement?.src) {
+          await videoElement.play();
+        }
         setPlayingTrack(trackId);
         pausedByUser.current[trackId] = false;
       } catch (error) {
-        console.warn("Failed to play audio:", error);
+        console.warn("Failed to play audio/video:", error);
       }
     },
     [playingTrack],
@@ -29,9 +36,11 @@ export function useAudioPlayer() {
 
   const pauseTrack = useCallback((trackId: string) => {
     const audioElement = audioRefs.current[trackId];
+    const videoElement = videoRefs.current[trackId];
     if (!audioElement) return;
 
     audioElement.pause();
+    videoElement?.pause();
     setPlayingTrack(null);
     pausedByUser.current[trackId] = true;
   }, []);
@@ -54,10 +63,18 @@ export function useAudioPlayer() {
   const handlePlayPause = useCallback(
     (trackId: string) => {
       const audioElement = audioRefs.current[trackId];
+      const videoElement = videoRefs.current[trackId];
+
       if (audioElement) {
         audioElement.pause();
         audioElement.currentTime = 0;
       }
+
+      if (videoElement) {
+        videoElement.pause();
+        videoElement.currentTime = 0;
+      }
+
       if (playingTrack === trackId) {
         setPlayingTrack(null);
       }
@@ -66,14 +83,34 @@ export function useAudioPlayer() {
     [playingTrack],
   );
 
+  const loadVideo = useCallback((trackId: string, videoUrl: string) => {
+    const videoElement = videoRefs.current[trackId];
+    if (!videoElement) return;
+
+    videoElement.src = videoUrl;
+    videoElement.load();
+  }, []);
+
+  const unloadVideo = useCallback((trackId: string) => {
+    const videoElement = videoRefs.current[trackId];
+    if (!videoElement) return;
+
+    videoElement.pause();
+    videoElement.removeAttribute("src");
+    videoElement.load();
+  }, []);
+
   return {
     playingTrack,
     hasInteracted,
     setHasInteracted,
     audioRefs,
+    videoRefs,
     togglePlayPause,
     shouldAutoPlay,
     playTrack,
     handlePlayPause,
+    loadVideo,
+    unloadVideo,
   };
 }

@@ -6,6 +6,7 @@ import type {
 import { Hono } from "hono";
 import { z } from "zod";
 import { getGenericAccessToken } from "@/lib/scraper/get-generic-access-token";
+import { getCanvasURL } from "@/lib/scraper/get-spotify-canvas";
 import { getSpotifyPreviewUrl } from "@/lib/scraper/get-track-preview-url";
 import { baseSpotifyFetch, genericSpotifyFetch } from "@/utils/spotify";
 
@@ -104,21 +105,27 @@ export const recommendationsRoutes = new Hono().post(
       `recommendations?${params.toString()}`,
     );
 
-    const likes = await baseSpotifyFetch<boolean[]>(
-      c,
-      `me/tracks/contains?ids=${recommendation.tracks.map(track => track.id).join(",")}`,
-      "GET",
-    );
+    const trackIds = recommendation.tracks.map(t => t.id).join(",");
+    const artistIds = recommendation.tracks.map(t => t.artists[0].id).join(",");
+    const canvasUris = recommendation.tracks.map(t => `spotify:track:${t.id}`);
 
-    const artists = await genericSpotifyFetch<ArtistsResponse>(
-      token,
-      `artists?ids=${recommendation.tracks.map(track => track.artists[0].id).join(",")}`,
-      "GET",
-    );
+    const [likes, artists, canvases] = await Promise.all([
+      baseSpotifyFetch<boolean[]>(
+        c,
+        `me/tracks/contains?ids=${trackIds}`,
+        "GET",
+      ),
+      genericSpotifyFetch<ArtistsResponse>(
+        token,
+        `artists?ids=${artistIds}`,
+        "GET",
+      ),
+      getCanvasURL(canvasUris),
+    ]);
 
     const follows = await baseSpotifyFetch<boolean[]>(
       c,
-      `me/following/contains?type=artist&ids=${artists.artists.map(artist => artist.id).join(",")}`,
+      `me/following/contains?type=artist&ids=${artists.artists.map(a => a.id).join(",")}`,
       "GET",
     );
 
@@ -132,6 +139,10 @@ export const recommendationsRoutes = new Hono().post(
           name: track.name,
           duration_ms: track.duration_ms,
           preview_url: previewUrl,
+          canvas_url:
+            canvases.find(
+              canvas => canvas.entityUri === `spotify:track:${track.id}`,
+            )?.url ?? null,
         },
         artist: {
           id: track.artists[0].id,

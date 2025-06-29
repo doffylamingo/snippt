@@ -11,6 +11,7 @@ export interface Track {
   name: string;
   duration_ms: number;
   preview_url: string;
+  canvas_url?: string;
 }
 
 export interface Artist {

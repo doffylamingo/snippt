@@ -21,7 +21,9 @@ const router = createBrowserRouter([
         loader: async () => {
           const res = await api.spotify.recommendations.$post({
             json: {
-              seed_artists: "2h93pZq0e7k5yf4dywlkpM",
+              limit: 10,
+              seed_artists: "5INjqkS1o8h1imAzPqGZBb,5n1xzqdY899CtBxeu88qHf",
+              min_popularity: 80,
             },
           });
           return await res.json();

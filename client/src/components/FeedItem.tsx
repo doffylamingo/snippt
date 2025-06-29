@@ -1,5 +1,5 @@
 import { Settings } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useInView } from "react-intersection-observer";
 import { Link } from "react-router";
 import spotifyLogo from "@/assets/spotify-logo.svg";
@@ -7,7 +7,10 @@ import ActionButton from "@/components/ActionButton";
 import AlbumCover from "@/components/AlbumCover";
 import ArtistProfile from "@/components/ArtistProfile";
 import TrackCard from "@/components/TrackCard";
-import { api } from "@/lib/api-client";
+import useAutoPlay from "@/hooks/useAutoPlay";
+import useTrackActions from "@/hooks/useTrackActions";
+import useTrackAudio from "@/hooks/useTrackProgress";
+import useVideoLoader from "@/hooks/useVideoLoader";
 import type { Recommendations } from "@/types";
 
 interface TrackProps {
@@ -20,95 +23,38 @@ interface TrackProps {
 export default function FeedItem({ item, audioPlayer }: TrackProps) {
   const { ref, inView } = useInView({ threshold: 0.5 });
   const trackId = item.track.id;
-  const [progress, setProgress] = useState(0);
-  const [liked, setLiked] = useState(item.liked);
-  const [isFollowing, setIsFollowing] = useState(item.isFollowing);
+  const progress = useTrackAudio(trackId, audioPlayer);
+  useAutoPlay(inView, trackId, audioPlayer);
+  const videoRef = useVideoLoader(
+    trackId,
+    item.track.canvas_url,
+    inView,
+    audioPlayer,
+  );
+  const { liked, isFollowing, handleTrackLike, handleFollowArtist } =
+    useTrackActions(item);
 
-  useEffect(() => {
-    if (!audioPlayer.hasInteracted) return;
-
-    if (
-      inView &&
-      audioPlayer.playingTrack !== trackId &&
-      audioPlayer.shouldAutoPlay(trackId)
-    ) {
-      audioPlayer.playTrack(trackId);
-    } else if (!inView) {
-      audioPlayer.handlePlayPause(trackId);
-    }
-  }, [inView, audioPlayer, trackId]);
-
-  useEffect(() => {
-    const audioElement = audioPlayer.audioRefs.current[trackId];
-    if (!audioElement) return;
-
-    const updateProgress = () => {
-      const { currentTime, duration } = audioElement;
-      if (duration > 0) {
-        setProgress((currentTime / duration) * 100);
-      }
-    };
-
-    const handleEnded = () => {
-      setProgress(0);
-      audioPlayer.handlePlayPause(trackId);
-    };
-
-    audioElement.addEventListener("timeupdate", updateProgress);
-    audioElement.addEventListener("ended", handleEnded);
-
-    return () => {
-      audioElement.removeEventListener("timeupdate", updateProgress);
-      audioElement.removeEventListener("ended", handleEnded);
-    };
+  const handlePlayPause = useCallback(() => {
+    audioPlayer.togglePlayPause(trackId);
   }, [audioPlayer, trackId]);
-
-  const handleTrackLike = useCallback(async () => {
-    const previousLiked = liked;
-    setLiked(prev => !prev);
-
-    try {
-      const res = liked
-        ? await api.spotify.tracks.unlike.$post({ json: { id: trackId } })
-        : await api.spotify.tracks.like.$post({ json: { id: trackId } });
-
-      if (!res.ok) {
-        setLiked(previousLiked);
-      }
-    } catch {
-      setLiked(previousLiked);
-    }
-  }, [liked, trackId]);
-
-  const handleFollowArtist = useCallback(async () => {
-    const previousFollowing = isFollowing;
-    setIsFollowing(prev => !prev);
-
-    try {
-      const res = previousFollowing
-        ? await api.spotify.profile.unfollow.$post({
-            json: { id: item.artist.id },
-          })
-        : await api.spotify.profile.follow.$post({
-            json: {
-              id: item.artist.id,
-            },
-          });
-
-      if (!res.ok) {
-        setIsFollowing(previousFollowing);
-      }
-    } catch {
-      setIsFollowing(previousFollowing);
-    }
-  }, [isFollowing, item.artist.id]);
 
   return (
     <div
       ref={ref}
       className="relative mx-auto flex h-screen w-full snap-start overflow-hidden bg-[#0a0a0a] lg:max-w-lg"
     >
-      <div className="absolute inset-0 z-0 flex flex-col px-3 py-6 md:px-5">
+      {item.track.canvas_url && (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 h-full w-full object-cover opacity-50"
+          loop
+          muted
+          preload="auto"
+          playsInline
+        />
+      )}
+
+      <div className="absolute inset-0 z-10 flex flex-col px-3 py-6 md:px-5">
         <div className="mb-4 flex items-center justify-between">
           <ActionButton>
             <a
@@ -132,12 +78,14 @@ export default function FeedItem({ item, audioPlayer }: TrackProps) {
 
         <div
           className="mb-6 flex min-h-0 flex-1 items-center justify-center"
-          onClick={() => audioPlayer.togglePlayPause(trackId)}
+          onClick={handlePlayPause}
         >
-          <AlbumCover
-            src={item.album.cover}
-            alt={item.album.name}
-          />
+          {!item.track.canvas_url && (
+            <AlbumCover
+              src={item.album.cover}
+              alt={item.album.name}
+            />
+          )}
         </div>
 
         <div className="space-y-3">
@@ -158,7 +106,7 @@ export default function FeedItem({ item, audioPlayer }: TrackProps) {
             liked={liked}
             handleTrackLike={handleTrackLike}
           />
-          <div className="w-full bg-gray-700">
+          <div className="w-full bg-white/15">
             <div
               className="rounded-full bg-white p-0.5 transition-all duration-300 ease-linear"
               style={{ width: `${progress}%` }}

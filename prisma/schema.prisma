@@ -68,3 +68,11 @@ model Verification {
 
   @@map("verification")
 }
+
+model SpotifyToken {
+  id        String   @id @default(cuid())
+  token     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
